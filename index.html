@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>  বিরিয়ানি স্পট ট্র্যাকার - Cyber Mask Bangladesh</title>
+    <title>বিরিয়ানি ট্র্যাকার - Cyber Mask Bangladesh</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <style>
         body { font-family: 'Hind Siliguri', sans-serif; background-color: #f8fafc; }
@@ -20,7 +19,7 @@
 
     <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-2xl shadow-sm border-b-4 border-orange-500">
         <div class="text-center md:text-left mb-4 md:mb-0">
-            <h1 class="text-2xl font-bold text-gray-800 branding-text">🍽️ CMB Food Tracker</h1>
+            <h1 class="text-2xl font-bold text-gray-800 branding-text">🍽️ বিরিয়ানি স্পট ট্র্যাকার</h1>
             <p class="text-orange-600 font-semibold text-sm">Make by <span class="underline">Cyber Mask Bangladesh</span></p>
         </div>
         <a href="https://www.facebook.com/cyber.mask.bangladesh" target="_blank" 
@@ -53,10 +52,6 @@
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">কি দেওয়া হচ্ছে? (টাইপ করুন) *</label>
                         <input type="text" id="menuItem" required class="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-orange-400">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">ছবি আপলোড (Fact Check) *</label>
-                        <input type="file" id="proofImage" accept="image/*" required class="w-full text-xs border bg-gray-50 p-1.5 rounded-lg">
-                    </div>
                     <button type="submit" id="submitBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-all">সাবমিট করুন</button>
                 </form>
             </div>
@@ -68,7 +63,6 @@
     </div>
 
     <script>
-        // আপনার google-services.json ফাইল থেকে প্রাপ্ত কনফিগারেশন
         const firebaseConfig = {
             apiKey: "AIzaSyDZP8JcHKDjPBHc709mDiwVT-4ELTujDMM",
             authDomain: "topup-zone-289cc.firebaseapp.com",
@@ -79,36 +73,26 @@
             appId: "1:960114311476:android:5d66dbe583f170c6b7a561"
         };
 
-        // ফায়ারবেজ ইনিশিয়েলাইজ করা
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const storage = firebase.storage();
 
         const form = document.getElementById('megaForm');
         const feedList = document.getElementById('feedList');
 
-        // ডাটা সাবমিট ফাংশন
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
-            const file = document.getElementById('proofImage').files[0];
             
             submitBtn.disabled = true;
-            submitBtn.innerText = "আপলোড হচ্ছে...";
+            submitBtn.innerText = "প্রসেসিং...";
 
             try {
-                // ১. ছবি আপলোড করা
-                const storageRef = storage.ref('food_spots/' + Date.now() + "_" + file.name);
-                const snapshot = await storageRef.put(file);
-                const imageUrl = await snapshot.ref.getDownloadURL();
-
-                // ২. ডাটাবেজে তথ্য সেভ করা
                 const newSpotRef = db.ref('spots').push();
                 await newSpotRef.set({
                     place: document.getElementById('placeName').value,
                     area: document.getElementById('area').value,
                     menu: document.getElementById('menuItem').value,
-                    image: imageUrl,
+                    image: "https://via.placeholder.com/400x200?text=No+Image", // ডিফল্ট ইমেজ
                     status: 'pending',
                     timestamp: firebase.database.ServerValue.TIMESTAMP
                 });
@@ -124,7 +108,6 @@
             submitBtn.innerText = "সাবমিট করুন";
         });
 
-        // ফায়ারবেজ থেকে লাইভ ডাটা লোড করা
         db.ref('spots').on('value', (snapshot) => {
             const data = snapshot.val();
             if (!data) {
@@ -137,13 +120,8 @@
                 const item = data[key];
                 return `
                     <div class="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-xl transition-all border border-gray-100">
-                        <div class="relative h-48">
-                            <img src="${item.image}" class="w-full h-full object-cover">
-                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                                <p class="text-white font-bold text-sm">${item.place}</p>
-                            </div>
-                        </div>
                         <div class="p-4 flex-grow">
+                            <h3 class="font-bold text-gray-800 text-lg">🏨 ${item.place}</h3>
                             <span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded">📍 ${item.area}</span>
                             <p class="mt-2 text-gray-700 text-sm font-medium italic border-l-2 border-orange-400 pl-2">"${item.menu}"</p>
                             
@@ -160,7 +138,6 @@
             }).join('');
         });
 
-        // স্ট্যাটাস আপডেট ও সার্চ ফাংশন
         window.setStatus = (id, status) => db.ref('spots/' + id).update({ status: status });
 
         function searchSpots() {
@@ -168,12 +145,7 @@
             db.ref('spots').once('value', (snapshot) => {
                 const data = snapshot.val();
                 if(!data) return;
-                const filtered = Object.keys(data).filter(key => 
-                    data[key].place.toLowerCase().includes(input) || 
-                    data[key].area.toLowerCase().includes(input) || 
-                    data[key].menu.toLowerCase().includes(input)
-                );
-                // প্রদর্শনী কোড এখানে কাজ করবে
+                // সার্চ লজিক এখানে ডাটাবেজ ফিল্টার করবে
             });
         }
     </script>
